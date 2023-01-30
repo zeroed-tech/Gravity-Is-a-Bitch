@@ -1,14 +1,10 @@
 package tech.zeroed.jamgame.gab;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.SnapshotArray;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.Rect;
 import com.dongbat.jbump.World;
 import tech.zeroed.jamgame.gab.Entities.Entity;
 
 import static tech.zeroed.jamgame.gab.GravitysABitch.TILE_SIZE;
-import static tech.zeroed.jamgame.gab.GravitysABitch.shapeDrawer;
 
 public class Physics {
 
@@ -38,7 +34,7 @@ public class Physics {
 
         //draw all entities
         for (Entity entity : entities) {
-            entity.draw();
+            entity.draw(delta);
         }
     }
 

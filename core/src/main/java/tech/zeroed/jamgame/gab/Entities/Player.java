@@ -4,170 +4,57 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.*;
 import tech.zeroed.jamgame.gab.GravitysABitch;
 import tech.zeroed.jamgame.gab.Room;
-import tech.zeroed.jamgame.gab.RoomManager;
 import text.formic.Stringf;
 
 import static tech.zeroed.jamgame.gab.GravitysABitch.*;
-import static tech.zeroed.jamgame.gab.Room.MoveDirection.*;
 
 public class Player extends Entity{
 
     float maxSpeed = 0;
 
+    public static final float ACCELERATION = 10f;
+    public static final float MAX_SPEED = 8f;
+
     PlayerCollisionFilter PLAYER_COLLISION_FILTER = new PlayerCollisionFilter();
     private Collisions projectedCollisions = new Collisions();
-    private Room.MoveDirection moveDirection = Room.MoveDirection.RIGHT;
+    private float deltaX;
+    private float deltaY;
 
     public Player(){
         boundingBoxWidth = 16;
         boundingBoxHeight = 25;
         item = new Item<>(this);
-        setGravity(RoomManager.BASE_MOVING_GRAVITY, -RoomManager.BASE_HOLDING_GRAVITY);
-    }
-
-    private void setGravity(float x, float y){
-        this.gravityX = x;
-        this.gravityY = y;
-    }
-
-    public void setMaxSpeed(float maxSpeed){
-        this.maxSpeed = maxSpeed;
-    }
-
-    public void setMoveDirection(Room.MoveDirection moveDirection) {
-        if(moveDirection == this.moveDirection) return;
-
-        float oldVelocityX = Math.abs(velocityX);
-        float oldVelocityY = Math.abs(velocityY);
-
-        if(this.moveDirection == Room.MoveDirection.RIGHT && moveDirection == Room.MoveDirection.DOWN){
-            if(gravityY > 0){
-                // Currently on the roof
-                velocityX = oldVelocityY;
-                setGravity(RoomManager.BASE_HOLDING_GRAVITY, -RoomManager.BASE_MOVING_GRAVITY);
-            }else{
-                // Currently on the floor
-                velocityX = -oldVelocityY;
-                setGravity(-RoomManager.BASE_HOLDING_GRAVITY, -RoomManager.BASE_MOVING_GRAVITY);
-            }
-            velocityY = -oldVelocityX;
-        }
-        else if(this.moveDirection == Room.MoveDirection.RIGHT && moveDirection == Room.MoveDirection.UP){
-            if(gravityY > 0){
-                velocityX = -oldVelocityY;
-                setGravity(-RoomManager.BASE_HOLDING_GRAVITY, RoomManager.BASE_MOVING_GRAVITY);
-            }else{
-                velocityX = oldVelocityY;
-                setGravity(RoomManager.BASE_HOLDING_GRAVITY, RoomManager.BASE_MOVING_GRAVITY);
-            }
-            velocityY = oldVelocityX;
-        }
-        else if (this.moveDirection == Room.MoveDirection.DOWN && moveDirection == Room.MoveDirection.RIGHT){
-            if(gravityX > 0){
-                // On the right wall
-                velocityY = oldVelocityX;
-                setGravity(RoomManager.BASE_MOVING_GRAVITY, RoomManager.BASE_HOLDING_GRAVITY);
-            }else{
-                // On the left wall
-                velocityY = -oldVelocityX;
-                setGravity(RoomManager.BASE_MOVING_GRAVITY, -RoomManager.BASE_HOLDING_GRAVITY);
-            }
-            velocityX = oldVelocityY;
-        }
-        else if (this.moveDirection == Room.MoveDirection.DOWN && moveDirection == Room.MoveDirection.LEFT){
-            if(gravityX > 0){
-                velocityY = -oldVelocityX;
-                setGravity(-RoomManager.BASE_MOVING_GRAVITY, -RoomManager.BASE_HOLDING_GRAVITY);
-            }else{
-                velocityY = oldVelocityX;
-                setGravity(-RoomManager.BASE_MOVING_GRAVITY, RoomManager.BASE_HOLDING_GRAVITY);
-            }
-            velocityX = -oldVelocityY;
-        }
-        else if (this.moveDirection == Room.MoveDirection.LEFT && moveDirection == Room.MoveDirection.DOWN){
-            if(gravityY > 0){
-                velocityX = -oldVelocityY;
-                setGravity(-RoomManager.BASE_HOLDING_GRAVITY, -RoomManager.BASE_MOVING_GRAVITY);
-            }else{
-                velocityX = -oldVelocityY;
-                setGravity(RoomManager.BASE_HOLDING_GRAVITY, -RoomManager.BASE_MOVING_GRAVITY);
-            }
-             velocityY = -oldVelocityX;
-        }
-        else if (this.moveDirection == Room.MoveDirection.LEFT && moveDirection == Room.MoveDirection.UP){
-            if(gravityY > 0){
-                velocityX = oldVelocityY;
-                setGravity(RoomManager.BASE_HOLDING_GRAVITY, RoomManager.BASE_MOVING_GRAVITY);
-            }else{
-                velocityX = -oldVelocityY;
-                setGravity(-RoomManager.BASE_HOLDING_GRAVITY, RoomManager.BASE_MOVING_GRAVITY);
-            }
-            velocityY = oldVelocityX;
-        }
-        else if (this.moveDirection == Room.MoveDirection.UP && moveDirection == Room.MoveDirection.RIGHT){
-            if(gravityX > 0){
-                velocityY = -oldVelocityX;
-                setGravity(RoomManager.BASE_MOVING_GRAVITY, -RoomManager.BASE_HOLDING_GRAVITY);
-            }else{
-                velocityY = oldVelocityX;
-                setGravity(RoomManager.BASE_MOVING_GRAVITY, RoomManager.BASE_HOLDING_GRAVITY);
-            }
-            velocityX = oldVelocityY;
-        }
-        else if (this.moveDirection == Room.MoveDirection.UP && moveDirection == Room.MoveDirection.LEFT){
-            if(gravityX > 0){
-                velocityY = oldVelocityX;
-                setGravity(-RoomManager.BASE_MOVING_GRAVITY, RoomManager.BASE_HOLDING_GRAVITY);
-            }else{
-                velocityY = -oldVelocityX;
-                setGravity(-RoomManager.BASE_MOVING_GRAVITY, -RoomManager.BASE_HOLDING_GRAVITY);
-            }
-            velocityX = -oldVelocityY;
-        }
-
-        this.moveDirection = moveDirection;
     }
 
     @Override
     public void act(float delta) {
-        boolean flipGravity  = Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+        boolean left  = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean up    = Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean down  = Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S);
+
         boolean shoot = Gdx.input.isKeyPressed(Input.Keys.SPACE);
 
-        if(flipGravity){
-            if(moveDirection == LEFT || moveDirection == RIGHT){
-                gravityY *= -1;
-            }else{
-                gravityX *= -1;
-            }
-        }
+        deltaX = 0;
+        deltaY = 0;
 
-        // Add gravity
-        float deltaX = delta * gravityX;
-        float deltaY = delta * gravityY;
+        if(left) deltaX += -ACCELERATION * delta;
+        else if(right) deltaX += ACCELERATION * delta;
+
+        if(up) deltaY += ACCELERATION * delta;
+        else if(down) deltaY += -ACCELERATION * delta;
+
+        if(deltaX > 0 && velocityX < 0 || deltaX < 0 && velocityX > 0) deltaX*=4;
+        if(deltaY > 0 && velocityY < 0 || deltaY < 0 && velocityY > 0) deltaY*=4;
 
         velocityX += deltaX;
         velocityY += deltaY;
 
-        switch (moveDirection){
-            case LEFT:
-                velocityX = MathUtils.clamp(velocityX, -maxSpeed, 0);
-                break;
-            case RIGHT:
-                velocityX = MathUtils.clamp(velocityX, 0, maxSpeed);
-                break;
-            case UP:
-                velocityY = MathUtils.clamp(velocityY, 0, maxSpeed);
-                break;
-            case DOWN:
-                //velocityY = MathUtils.clamp(velocityY, -maxSpeed, 0);
-                if(velocityY < -maxSpeed)
-                    velocityY += 0.001f;
-                break;
-        }
+        velocityX = MathUtils.clamp(velocityX, -MAX_SPEED, MAX_SPEED);
+        velocityY = MathUtils.clamp(velocityY, -MAX_SPEED, MAX_SPEED);
 
         // Update final position
         x += velocityX;
@@ -179,13 +66,8 @@ public class Player extends Entity{
             Collision collision = results.projectedCollisions.get(i);
             Entity other = (Entity) collision.other.userData;
             if(other instanceof Block){
-                if(moveDirection == UP || moveDirection == DOWN){
-                    if (collision.normal.x == 1 || collision.normal.x == -1)
-                        velocityX = 0;
-                }else{
-                    if (collision.normal.y == 1 || collision.normal.y == -1)
-                        velocityY = 0;
-                }
+                if (collision.normal.x == 1 || collision.normal.x == -1) velocityX = 0;
+                if (collision.normal.y == 1 || collision.normal.y == -1) velocityY = 0;
             }
         }
 
@@ -198,26 +80,29 @@ public class Player extends Entity{
     }
 
     @Override
-    public void draw(){
+    public void draw(float delta){
         shapeDrawer.setColor(Color.BLUE);
         shapeDrawer.setDefaultLineWidth(1.0f);
+        shapeDrawer.filledRectangle(x, y, boundingBoxWidth, boundingBoxHeight);
         shapeDrawer.circle(x + boundingBoxWidth/2, y + boundingBoxHeight/2, 5);
-        spriteBatch.end();
-        hudBatch.begin();
-        font.draw(hudBatch, Stringf.format(
-                 "X:                %.2f\n" +
-                 "Y:                %.2f\n" +
-                 "Speed X:       %.2f\n" +
-                 "Speed Y:       %.2f\n" +
-                 "MaxSpeed:      %.2f\n" +
-                 "Gravity:      %s\n" +
-                 "Gravity X:       %.2f\n" +
-                 "Gravity Y:       %.2f\n"
-        , x, y, velocityX, velocityY, maxSpeed, roomManager.currentRoom.getMoveDirection(), gravityX, gravityY),
-        -hudCamera.viewportWidth/2+10,  hudCamera.viewportHeight/2-10 - font.getLineHeight());
-        hudBatch.end();
-        spriteBatch.begin();
-        Gdx.app.log("Player", Stringf.format("X: %.2f Y: %.2f Speed X: %.2f Speed Y: %.2f MaxSpeed: %.2f Gravity: %s Gravity X: %.2f Gravity Y: %.2f", x, y, velocityX, velocityY, maxSpeed, roomManager.currentRoom.getMoveDirection(), gravityX, gravityY));
+//        spriteBatch.end();
+//        hudBatch.begin();
+//        Room current = roomManager.currentRoom;
+//        font.draw(hudBatch, Stringf.format(
+//                 "X:               %.2f\n" +
+//                 "Y:               %.2f\n" +
+//                 "Speed X:         %.2f\n" +
+//                 "Speed Y:         %.2f\n" +
+//                 "Delta X:         %.2f\n" +
+//                 "Delta Y:         %.2f\n" +
+//                 "MaxSpeed:        %.2f\n" +
+//                 "Gravity:           %s\n" +
+//                 "Gravity X:       %.2f\n" +
+//                 "Gravity Y:       %.2f\n"
+//        , x, y, velocityX, velocityY, deltaX, deltaY, maxSpeed, (current.getInitialMoveDirection() == current.getFinalMoveDirection() ? current.getInitialMoveDirection() : ""+current.getInitialMoveDirection()+"->"+current.getFinalMoveDirection()), gravityX, gravityY),
+//        -hudCamera.viewportWidth/2+10,  hudCamera.viewportHeight/2-10 - font.getLineHeight());
+//        hudBatch.end();
+//        spriteBatch.begin();
     }
 
 

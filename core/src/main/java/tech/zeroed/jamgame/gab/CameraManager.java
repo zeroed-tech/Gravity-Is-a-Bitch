@@ -2,11 +2,7 @@ package tech.zeroed.jamgame.gab;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector3;
 import tech.zeroed.jamgame.gab.Entities.Player;
-
-import static tech.zeroed.jamgame.gab.Room.GravityType.*;
 
 public class CameraManager {
     private OrthographicCamera camera;

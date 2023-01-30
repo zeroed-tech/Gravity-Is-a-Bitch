@@ -4,7 +4,6 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -13,16 +12,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.kotcrab.vis.ui.VisUI;
 import space.earlygrey.shapedrawer.ShapeDrawer;
-import tech.zeroed.jamgame.gab.Entities.Block;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class GravitysABitch extends ApplicationAdapter {
@@ -43,6 +39,7 @@ public class GravitysABitch extends ApplicationAdapter {
     public static AssetLoader assetManager;
     public static RoomManager roomManager;
     private CameraManager cameraManager;
+    public static TextureAtlas atlas;
 
     @Override
     public void create() {
@@ -56,7 +53,7 @@ public class GravitysABitch extends ApplicationAdapter {
 
         VisUI.load(assetManager.get("Skins/Skin.json", Skin.class));
 
-        //atlas = assetManager.get("Sprites.atlas");
+        atlas = new TextureAtlas(Gdx.files.internal("Sprites/Sprites.atlas"));
 
         hudCamera = new OrthographicCamera(1920, 1080);
         hudCamera.position.z = 1;
@@ -70,68 +67,13 @@ public class GravitysABitch extends ApplicationAdapter {
 
         spriteBatch = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 0.5f;
+        camera.zoom = 0.75f;
         spriteBatch.setProjectionMatrix(camera.combined);
 
         physics = new Physics();
 
         roomManager = new RoomManager();
-
-        roomManager.addTemplate(new RoomTemplate(){
-            {
-                layout = "BBBBBBBBBBBBBBBBB\n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "   P             \n" +
-                         "BBBBBBBBBBBBBBBBB\n";
-                containsSpawnPoint = true;
-                entrances = 0;
-                exits = 1;
-                gravityType = Room.GravityType.VERTICAL;
-            }
-        });
-
-        roomManager.addTemplate(new RoomTemplate(){
-            {
-                layout = "BBBBBBBBBBBBBBBBB\n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "                 \n" +
-                         "BBBBBBBBBBBBBBBBB\n";
-                gravityType = Room.GravityType.VERTICAL;
-                entrances = 1;
-                exits = 1;
-            }
-        });
-
-
-        roomManager.addTemplate(new RoomTemplate(){
-            {
-                layout = "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n" +
-                        "B       B\n";
-                entrances = 1;
-                exits = 1;
-                gravityType = Room.GravityType.HORIZONTAL;
-            }
-        });
-
-        roomManager.generateLevel(250);
+        roomManager.generateLevel(200);
 
         cameraManager = new CameraManager(camera, roomManager);
 
@@ -157,6 +99,15 @@ public class GravitysABitch extends ApplicationAdapter {
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
             paused = !paused;
+        }
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.Q)){
+            camera.zoom -= 0.1f;
+            camera.update();
+        }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.E)){
+            camera.zoom += 0.1f;
+            camera.update();
         }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && Gdx.app.getType() != Application.ApplicationType.WebGL){
